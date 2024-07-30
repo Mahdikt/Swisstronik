@@ -1,7 +1,5 @@
 const hre = require("hardhat");
-const fs = require("fs");
 const { encryptDataField, decryptNodeResponse } = require("@swisstronik/utils");
-
 const sendShieldedTransaction = async (signer, destination, data, value) => {
   const rpcLink = hre.network.config.url;
   const [encryptedData] = await encryptDataField(rpcLink, data);
@@ -14,19 +12,23 @@ const sendShieldedTransaction = async (signer, destination, data, value) => {
 };
 
 async function main() {
-  const contractAddress = fs.readFileSync("contract.txt", "utf8").trim();
+  const contractAddress = "";
   const [signer] = await hre.ethers.getSigners();
-  const contractFactory = await hre.ethers.getContractFactory("PrivateNFT");
+
+  const contractFactory = await hre.ethers.getContractFactory("TestToken");
   const contract = contractFactory.attach(contractAddress);
-  const functionName = "safeMint";
-  const safeMintTx = await sendShieldedTransaction(
+
+  const functionName = "mint100tokens";
+  const mint100TokensTx = await sendShieldedTransaction(
     signer,
     contractAddress,
-    contract.interface.encodeFunctionData(functionName, [signer.address, 1]),
+    contract.interface.encodeFunctionData(functionName),
     0
   );
-  await safeMintTx.wait();
-  console.log("Transaction Receipt: ", `Minting NFT has been success! Transaction hash: https://explorer-evm.testnet.swisstronik.com/tx/${safeMintTx.hash}`);
+
+  await mint100TokensTx.wait();
+
+  console.log("Transaction Receipt: ", mint100TokensTx.hash);
 }
 
 main().catch((error) => {
