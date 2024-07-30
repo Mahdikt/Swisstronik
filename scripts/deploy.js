@@ -1,14 +1,31 @@
-const hre = require("hardhat");
+const fs = require("fs");
 
 async function main() {
-  const contract = await hre.ethers.deployContract("TestToken");
+  const [deployer] = await ethers.getSigners();
 
-  await contract.waitForDeployment();
+  console.log("Deploying contracts with the account:", deployer.address);
 
-  console.log(`Contract address : ${contract.target}`);
+  const Swisstronik = await ethers.getContractFactory('Swisstronik');
+  const swisstronik = await Swisstronik.deploy();
+  await swisstronik.waitForDeployment(); 
+  console.log('Non-proxy Swisstronik deployed to:', swisstronik.target);
+  fs.writeFileSync("contract.txt", swisstronik.target);
+
+  console.log(`Deployment transaction hash: https://explorer-evm.testnet.swisstronik.com/address/${swisstronik.target}`);
+
+  console.log('');
+  
+  const upgradedSwisstronik = await upgrades.deployProxy(Swisstronik, ['Hello Swisstronik from Happy Cuan Airdrop!!'], { kind: 'transparent' });
+  await upgradedSwisstronik.waitForDeployment(); 
+  console.log('Proxy Swisstronik deployed to:', upgradedSwisstronik.target);
+  fs.writeFileSync("proxiedContract.txt", upgradedSwisstronik.target);
+
+  console.log(`Deployment transaction hash: https://explorer-evm.testnet.swisstronik.com/address/${upgradedSwisstronik.target}`);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
